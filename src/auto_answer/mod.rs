@@ -5,9 +5,9 @@ use tokio::time::sleep;
 use colored::Colorize;
 use crate::{document::*, util::*};
 
-async fn check_completed(driver: WebDriver) -> WebDriverResult<bool> {
+async fn check_completed(driver: &WebDriver) -> WebDriverResult<bool> {
     let selector = By::Css("div[class='sc-kmbxGf jjrWnM']");
-    if let Err(_) = info::find(driver.clone(), selector).await {
+    if let Err(_) = info::find(driver, &selector).await {
         return Ok(false);
     }
 
@@ -16,25 +16,25 @@ async fn check_completed(driver: WebDriver) -> WebDriverResult<bool> {
     Ok(true)
 }
 
-async fn interferance(driver: WebDriver) -> WebDriverResult<()> {
+async fn interferance(driver: &WebDriver) -> WebDriverResult<()> {
     let selector = By::Css("button[class='ant-btn css-1k9m51z ant-btn-primary ant-btn-lg']");
-    if let Err(_) = info::find(driver.clone(), selector.clone()).await {
+    if let Err(_) = info::find(driver, &selector).await {
         return Ok(());
     }
 
     println!("{}", "\nInterferance detected".blue());
-    actions::click_from(driver.clone(), selector, 1, 10).await?;
+    actions::click_from(driver, &selector, 1, 10).await?;
     println!("{}", "Interferance removed".blue());
 
     let selector = By::Css("div[class='sc-hdWpuu cCeQmZ']");
-    actions::click(driver.clone(), selector).await?;
+    actions::click(driver, &selector).await?;
 
     Ok(())
 }
 
-async fn get(driver: WebDriver, data: Value) -> WebDriverResult<(String, String)> {
+async fn get(driver: &WebDriver, data: &Value) -> WebDriverResult<(String, String)> {
     let selector = By::Css("span[class='notranslate lang-en']");
-    let question = info::get_text(driver.clone(), selector.clone()).await?;
+    let question = info::get_text(driver, &selector).await?;
 
     if let Some(entry) = data.as_array().and_then(|arr| arr.iter().find(|entry| {
         entry["question"].as_str() == Some(question.as_str())
@@ -49,27 +49,31 @@ async fn get(driver: WebDriver, data: Value) -> WebDriverResult<(String, String)
 }
 
 #[async_recursion::async_recursion]
-pub async fn auto_answer(driver: WebDriver, answers: Value) -> WebDriverResult<()> {
-    if check_completed(driver.clone()).await? {
+pub async fn auto_answer(driver: &WebDriver, answers: &Value) -> WebDriverResult<()> {
+    if check_completed(driver).await? {
         return Ok(());
     }
 
-    interferance(driver.clone()).await?;
+    interferance(driver).await?;
 
-    let (answer, question) = get(driver.clone(), answers.clone()).await?;
+    let (answer, question) = get(driver, answers).await?;
     if answer != "" {
-        let is_multi = info::exists(driver.clone(), By::XPath(&format!("//span[text()='{}']", answer))).await?;
+        let selector = By::XPath(&format!("//span[text()='{}']", answer));
+        let is_multi = info::exists(driver, &selector).await?;
         if is_multi {
-            actions::click(driver.clone(), By::XPath(&format!("//span[text()='{}']", answer))).await?;
+            actions::click(driver, &selector).await?;
         } else {
-            actions::send_keys(driver.clone(), By::Css("input[placeholder='Enter answer here...']"), &answer).await?;
+            let selector = By::Css("input[placeholder='Enter answer here...']");
+            actions::send_keys(driver, &selector, &answer).await?;
             sleep(Duration::from_secs_f64(0.25)).await;
-            actions::click(driver.clone(), By::Css("div[class='sc-EPlqQ iwsjJJ']")).await?;
+            let selector = By::Css("div.sc-EPlqQ.iwsjJJ");
+            actions::click(driver, &selector).await?;
         }
 
         sleep(Duration::from_secs_f64(0.25)).await;
 
-        let elements = info::query_all(driver.clone(), By::Css("div.sc-jvfpSw.eWPjkh"), 5).await?;
+        let selector = By::Css("div.sc-jvfpSw.eWPjkh");
+        let elements = info::query_all(driver, &selector, 1).await?;
         if let Some(element) = elements.get(2) {
             element.click().await?;
             let wait_time = get_random_number(3..10);
@@ -78,7 +82,7 @@ pub async fn auto_answer(driver: WebDriver, answers: Value) -> WebDriverResult<(
         }
     }
 
-    auto_answer(driver.clone(), answers).await?;
+    auto_answer(driver, answers).await?;
 
     Ok(())
 }

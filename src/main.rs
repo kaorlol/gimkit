@@ -22,13 +22,13 @@ async fn main() -> WebDriverResult<()> {
 	let driver = WebDriver::new("http://localhost:9515", caps).await?;
 	driver.goto(&args[1]).await?;
 
-	let data = login(driver.clone()).await?;
-	start_assignment(driver.clone()).await?;
+	let data = login(&driver).await?;
+	start_assignment(&driver).await?;
 
 	let old_handle = driver.window().await?;
-	let answers = get_answers(driver.clone(), old_handle, data).await?;
+	let answers = get_answers(&driver, old_handle, data).await?;
 
-	auto_answer(driver.clone(), answers).await?;
+	auto_answer(&driver, &answers).await?;
 
 	driver.quit().await?;
 
