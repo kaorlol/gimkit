@@ -31,6 +31,30 @@ pub mod info {
 
             Ok(element_value)
         }
+
+        #[async_recursion]
+        pub async fn get_text_from(driver: WebDriver, by: By, index: usize, text: &str, timeout: u64) -> WebDriverResult<String> {
+            let elements = query_all(driver.clone(), by.clone(), timeout).await?;
+            let element_text = elements.get(index).unwrap().text().await?;
+        
+            if element_text == text {
+                return get_text_from(driver.clone(), by, index, text, timeout).await
+            }
+
+            Ok(element_text)
+        }
+
+        #[async_recursion]
+        pub async fn get_value_from(driver: WebDriver, by: By, index: usize, value: &str, timeout: u64) -> WebDriverResult<String> {
+            let elements = query_all(driver.clone(), by.clone(), timeout).await?;
+            let element_value = elements.get(index).unwrap().value().await?.unwrap();
+        
+            if element_value == value {
+                return get_value_from(driver.clone(), by, index, value, timeout).await
+            }
+
+            Ok(element_value)
+        }
     }
     
     pub async fn get_text(driver: WebDriver, by: By) -> WebDriverResult<String> {
