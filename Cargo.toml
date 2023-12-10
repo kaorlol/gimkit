@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.75"
 async-recursion = "1.0.5"
-chromedriver-manager = "0.2.0"
+chromedriver-manager = "0.2.2"
 colored = "2.0.4"
 either = "1.9.0"
 serde = "1.0.193"

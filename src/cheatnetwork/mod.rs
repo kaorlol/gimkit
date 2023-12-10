@@ -3,15 +3,15 @@ use colored::Colorize;
 use serde_json::{Value, json};
 use thirtyfour::prelude::*;
 use tokio::time::{sleep, Instant};
-use crate::document::*;
+use crate::document::{action, info, recursion};
 
 async fn login(driver: &WebDriver, old_handle: &WindowHandle, data: &Value) -> WebDriverResult<()> {
     let new_handle = driver.new_tab().await?;
     driver.switch_to_window(new_handle).await?;
     driver.goto("https://cheatnetwork.eu/login").await?;
 
-    actions::send_keys(driver, &By::Tag("input"), data["backup-key"].as_str().unwrap()).await?;
-    actions::click_from(driver, &By::Tag("button"), 2, 10).await?;
+    action::send_keys(driver, &By::Tag("input"), data["backup-key"].as_str().unwrap()).await?;
+    action::click_from(driver, &By::Tag("button"), 2, 10).await?;
 
     driver.close_window().await?;
     driver.switch_to_window(old_handle.clone()).await?;
@@ -25,7 +25,7 @@ async fn get_grabber(driver: &WebDriver, old_handle: &WindowHandle) -> WebDriver
     driver.goto("https://cheatnetwork.eu/services/gimkit").await?;
 
     let selector = By::Tag("textarea");
-    let grabber = info::recursion::get_value(driver, &selector, "Loading...").await?;
+    let grabber = recursion::get_value(driver, &selector, "Loading...").await?;
 
     driver.close_window().await?;
     driver.switch_to_window(old_handle.clone()).await?;
@@ -33,14 +33,14 @@ async fn get_grabber(driver: &WebDriver, old_handle: &WindowHandle) -> WebDriver
     Ok(grabber)
 }
 
-pub async fn get_answers(driver: &WebDriver, old_handle: WindowHandle, data: Value) -> WebDriverResult<Value> {
+pub async fn get_answers(driver: &WebDriver, old_handle: &WindowHandle, data: Value) -> WebDriverResult<Value> {
     let start = Instant::now();
     println!("{}", "\nGetting answers...".blue());
 
-    login(&driver, &old_handle, &data).await?;
+    login(driver, old_handle, &data).await?;
 
-    let grabber = get_grabber(&driver, &old_handle).await?;
-    driver.execute(&grabber, vec![]).await?;
+    let grabber = get_grabber(driver, old_handle).await?;
+    driver.execute(&grabber, Vec::new()).await?;
 
     sleep(Duration::from_secs(1)).await;
 
@@ -65,7 +65,7 @@ pub async fn get_answers(driver: &WebDriver, old_handle: WindowHandle, data: Val
     }
 
     driver.close_window().await?;
-    driver.switch_to_window(old_handle).await?;
+    driver.switch_to_window(old_handle.clone()).await?;
 
     println!("{} {}", "Answers retrieved".blue(), format!("(took {}s)", start.elapsed().as_secs()).blue());
 

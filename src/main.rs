@@ -1,5 +1,5 @@
 use thirtyfour::prelude::*;
-use chromedriver_manager::manager::Handler;
+use chromedriver_manager::{manager::Handler, loglevel::LogLevel};
 use gimkit::{auto_answer::*, login::*, cheatnetwork::get_answers};
 
 // TODO: Support for progress bar
@@ -15,9 +15,9 @@ async fn main() -> WebDriverResult<()> {
 	}
 
 	let mut caps = DesiredCapabilities::chrome();
-	Handler::new().launch_chromedriver(&mut caps, false, "9515").await.expect("Failed to launch chromedriver");
+	Handler::new().launch_chromedriver(&mut caps, "9515", LogLevel::Off).await.expect("Failed to start chromedriver");
 	caps.add_chrome_arg("--mute-audio")?;
-	// caps.set_headless()?;
+	caps.set_headless()?;
 
 	let driver = WebDriver::new("http://localhost:9515", caps).await?;
 	driver.goto(&args[1]).await?;
@@ -26,7 +26,7 @@ async fn main() -> WebDriverResult<()> {
 	start_assignment(&driver).await?;
 
 	let old_handle = driver.window().await?;
-	let answers = get_answers(&driver, old_handle, data).await?;
+	let answers = get_answers(&driver, &old_handle, data).await?;
 
 	auto_answer(&driver, &answers).await?;
 
