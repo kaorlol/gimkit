@@ -1,9 +1,14 @@
-use std::time::Duration;
+use crate::{
+    document::{action, info},
+    utils::get_random_number,
+};
+
+use async_recursion::async_recursion;
+use colored::Colorize;
 use serde_json::Value;
+use std::time::Duration;
 use thirtyfour::prelude::*;
 use tokio::time::sleep;
-use colored::Colorize;
-use crate::{document::{action, info}, util::get_random_number};
 
 async fn check_completed(driver: &WebDriver) -> WebDriverResult<bool> {
     let selector = By::Css("div[class='sc-kmbxGf jjrWnM']");
@@ -36,9 +41,10 @@ async fn get(driver: &WebDriver, data: &Value) -> WebDriverResult<(String, Strin
     let selector = By::Css("span.notranslate.lang-en");
     let question = info::get_text(driver, &selector).await?;
 
-    if let Some(entry) = data.as_array().and_then(|arr| arr.iter().find(|entry| {
-        entry["question"].as_str() == Some(question.as_str())
-    })) {
+    if let Some(entry) = data.as_array().and_then(|arr| {
+        arr.iter()
+            .find(|entry| entry["question"].as_str() == Some(question.as_str()))
+    }) {
         if let Some(answer) = entry["answers"].as_array().and_then(|arr| arr.first()) {
             let answer_string = answer.to_string().trim_matches('"').to_owned();
             return Ok((answer_string, question));
@@ -48,7 +54,20 @@ async fn get(driver: &WebDriver, data: &Value) -> WebDriverResult<(String, Strin
     Ok((String::new(), String::new()))
 }
 
-#[async_recursion::async_recursion]
+pub async fn start_assignment(driver: &WebDriver) -> WebDriverResult<()> {
+    println!("{}", "\nStarting assignment...".blue());
+    info::query(driver, &By::Tag("svg")).await?;
+    action::click(driver, &By::Css(".btn-pushable")).await?;
+
+    println!("{}", "Assignment started\nLoading assignment...".blue());
+    action::click(driver, &By::Css("div.sc-hdWpuu.cCeQmZ']")).await?;
+
+    sleep(Duration::from_secs(1)).await;
+
+    Ok(())
+}
+
+#[async_recursion]
 pub async fn auto_answer(driver: &WebDriver, answers: &Value) -> WebDriverResult<()> {
     if check_completed(driver).await? {
         return Ok(());
