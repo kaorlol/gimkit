@@ -38,7 +38,6 @@ async fn main() -> WebDriverResult<()> {
 
     let old_handle = driver.window().await?;
     let answers = get_answers(&driver, &old_handle, data).await?;
-
     auto_answer(&driver, &answers).await?;
 
     driver.quit().await?;

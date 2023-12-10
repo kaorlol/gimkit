@@ -1,71 +1,71 @@
 use thirtyfour::prelude::*;
 
 pub async fn get_text(driver: &WebDriver, by: &By) -> WebDriverResult<String> {
-    Ok(query(driver, by).await?.text().await?)
+    let element = query(driver, by).await?;
+    let text = element.text().await?;
+    Ok(text)
 }
 
 pub async fn get_value(driver: &WebDriver, by: &By) -> WebDriverResult<String> {
-    Ok(query(driver, by).await?.value().await?.unwrap())
+    let element = &query(driver, by).await?;
+    let value = element.value().await?.unwrap_or_default();
+    Ok(value)
 }
 
 pub async fn get_text_from(driver: &WebDriver, by: &By, index: usize) -> WebDriverResult<String> {
-    Ok(query_all(driver, by)
-        .await?
-        .get(index)
-        .unwrap()
-        .text()
-        .await?)
+    let elements = query_all(driver, by).await?;
+    let element = elements.get(index).unwrap();
+    let text = element.text().await?;
+    Ok(text)
 }
 
 pub async fn get_value_from(driver: &WebDriver, by: &By, index: usize) -> WebDriverResult<String> {
-    Ok(query_all(driver, by)
-        .await?
-        .get(index)
-        .unwrap()
-        .value()
-        .await?
-        .unwrap())
+    let elements = query_all(driver, by).await?;
+    let element = elements.get(index).unwrap();
+    let value = element.value().await?.unwrap_or_default();
+    Ok(value)
 }
 
 pub async fn find(driver: &WebDriver, by: &By) -> WebDriverResult<WebElement> {
     if let Err(_) = driver.find(by.clone()).await {
-        // driver.to_owned().quit().await?;
-
         return Err(WebDriverError::NoSuchElement(format!(
             "No element found with {:?}",
             by
         )));
     }
 
-    Ok(driver.find(by.clone()).await?)
+    let element = driver.find(by.clone()).await?;
+    Ok(element)
 }
 
 pub async fn exists(driver: &WebDriver, by: &By) -> WebDriverResult<bool> {
-    Ok(driver.find_all(by.clone()).await?.len() > 0)
+    let elements = driver.find_all(by.clone()).await?;
+    let length = elements.len();
+    Ok(length > 0)
 }
 
 pub async fn query(driver: &WebDriver, by: &By) -> WebDriverResult<WebElement> {
     if let Err(_) = driver.query(by.clone()).and_displayed().first().await {
-        // driver.to_owned().quit().await?;
-
         return Err(WebDriverError::NoSuchElement(format!(
             "No element found with {:?}",
             by
         )));
     }
 
-    Ok(driver.query(by.clone()).and_displayed().first().await?)
+    let element_query = driver.query(by.clone());
+    let element = element_query.and_displayed().first().await?;
+    Ok(element)
 }
 
 pub async fn query_all(driver: &WebDriver, by: &By) -> WebDriverResult<Vec<WebElement>> {
     if let Err(_) = driver.query(by.clone()).and_displayed().all().await {
-        // driver.to_owned().quit().await?;
-
         return Err(WebDriverError::NoSuchElement(format!(
             "No element found with {:?}",
             by
         )));
     }
 
-    Ok(driver.query(by.clone()).and_displayed().all().await?)
+    let element_query = driver.query(by.clone());
+    let elements = element_query.and_displayed().all().await?;
+    Ok(elements)
 }

@@ -13,11 +13,12 @@ pub async fn login(driver: &WebDriver) -> WebDriverResult<Value> {
     let credentials = include_str!("..\\..\\credentials.json");
     let data: Value = serde_json::from_str(&credentials)?;
 
+    let link = By::Tag("a");
     let input = By::Tag("input");
     let button = By::Tag("button");
 
     println!("{}", "Logging in...".blue());
-    action::click_from(driver, &By::Tag("a"), 1).await?;
+    action::click_from(driver, &link, 1).await?;
 
     let email = data["email"].as_str().unwrap();
     action::send_keys(driver, &input, email).await?;

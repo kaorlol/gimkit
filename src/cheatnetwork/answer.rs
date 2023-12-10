@@ -16,8 +16,8 @@ async fn get_grabber(driver: &WebDriver, old_handle: &WindowHandle) -> WebDriver
         .goto("https://cheatnetwork.eu/services/gimkit")
         .await?;
 
-    let selector = By::Tag("textarea");
-    let grabber = recursion::get_value(driver, &selector, "Loading...").await?;
+    let script = By::Tag("textarea");
+    let grabber = recursion::get_value(driver, &script, "Loading...").await?;
 
     driver.close_window().await?;
     driver.switch_to_window(old_handle.clone()).await?;
