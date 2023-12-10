@@ -23,7 +23,7 @@ async fn main() -> WebDriverResult<()> {
 
     let mut caps = DesiredCapabilities::chrome();
     caps.add_chrome_arg("--mute-audio")?;
-    caps.set_headless()?;
+    // caps.set_headless()?;
 
     Handler::new()
         .launch_chromedriver(&mut caps, "9515", LogLevel::Off)

@@ -60,7 +60,7 @@ pub async fn start_assignment(driver: &WebDriver) -> WebDriverResult<()> {
     action::click(driver, &By::Css(".btn-pushable")).await?;
 
     println!("{}", "Assignment started\nLoading assignment...".blue());
-    action::click(driver, &By::Css("div.sc-hdWpuu.cCeQmZ']")).await?;
+    action::click(driver, &By::Css("div.sc-hdWpuu.cCeQmZ")).await?;
 
     sleep(Duration::from_secs(1)).await;
 
