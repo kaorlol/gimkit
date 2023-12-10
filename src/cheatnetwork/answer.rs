@@ -10,8 +10,8 @@ use thirtyfour::prelude::*;
 use tokio::time::{sleep, Instant};
 
 async fn get_grabber(driver: &WebDriver, old_handle: &WindowHandle) -> WebDriverResult<String> {
-    let new_handle = driver.new_tab().await?;
-    driver.switch_to_window(new_handle).await?;
+    let tab_handle = driver.new_tab().await?;
+    driver.switch_to_window(tab_handle).await?;
     driver
         .goto("https://cheatnetwork.eu/services/gimkit")
         .await?;
@@ -44,7 +44,7 @@ pub async fn get_answers(
     let new_handle = windows.last().unwrap();
     driver.switch_to_window(new_handle.clone()).await?;
 
-    let answers = info::query_all(driver, &By::Css(".question-box"), 10).await?;
+    let answers = info::query_all(driver, &By::Css(".question-box")).await?;
     let mut answers_text = Vec::new();
     for answer in answers {
         let question = answer.query(By::Tag("h2")).first().await?.text().await?;
@@ -63,11 +63,8 @@ pub async fn get_answers(
     driver.close_window().await?;
     driver.switch_to_window(old_handle.clone()).await?;
 
-    println!(
-        "{} {}",
-        "Answers retrieved".blue(),
-        format!("(took {}s)", start.elapsed().as_secs()).blue()
-    );
+    let time = format!("(took {:.2}s)", start.elapsed().as_secs_f32());
+    println!("{} {}", "Answers retrieved".blue(), time.dimmed());
 
     Ok(serde_json::to_value(answers_text)?)
 }

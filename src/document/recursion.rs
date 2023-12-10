@@ -32,13 +32,12 @@ pub async fn get_text_from(
     by: &By,
     index: usize,
     text: &str,
-    timeout: u64,
 ) -> WebDriverResult<String> {
-    let elements = query_all(driver, by, timeout).await?;
+    let elements = query_all(driver, by).await?;
     let element_text = elements.get(index).unwrap().text().await?;
 
     if element_text == text {
-        return get_text_from(driver, by, index, text, timeout).await;
+        return get_text_from(driver, by, index, text).await;
     }
 
     Ok(element_text)
@@ -50,13 +49,12 @@ pub async fn get_value_from(
     by: &By,
     index: usize,
     value: &str,
-    timeout: u64,
 ) -> WebDriverResult<String> {
-    let elements = query_all(driver, by, timeout).await?;
+    let elements = query_all(driver, by).await?;
     let element_value = elements.get(index).unwrap().value().await?.unwrap();
 
     if element_value == value {
-        return get_value_from(driver, by, index, value, timeout).await;
+        return get_value_from(driver, by, index, value).await;
     }
 
     Ok(element_value)

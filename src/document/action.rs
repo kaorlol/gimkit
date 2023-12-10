@@ -7,13 +7,8 @@ pub async fn click(driver: &WebDriver, by: &By) -> WebDriverResult<()> {
     Ok(())
 }
 
-pub async fn click_from(
-    driver: &WebDriver,
-    by: &By,
-    index: usize,
-    timeout: u64,
-) -> WebDriverResult<()> {
-    let elements = query_all(driver, by, timeout).await?;
+pub async fn click_from(driver: &WebDriver, by: &By, index: usize) -> WebDriverResult<()> {
+    let elements = query_all(driver, by).await?;
     elements
         .get(index)
         .unwrap_or_else(|| {
@@ -39,9 +34,8 @@ pub async fn send_keys_from(
     by: &By,
     index: usize,
     keys: &str,
-    timeout: u64,
 ) -> WebDriverResult<()> {
-    query_all(driver, by, timeout)
+    query_all(driver, by)
         .await?
         .get(index)
         .unwrap()

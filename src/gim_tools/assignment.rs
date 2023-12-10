@@ -28,7 +28,7 @@ async fn interferance(driver: &WebDriver) -> WebDriverResult<()> {
     }
 
     println!("{}", "\nInterferance detected".blue());
-    action::click_from(driver, &selector, 1, 10).await?;
+    action::click_from(driver, &selector, 1).await?;
     println!("{}", "Interferance removed".blue());
 
     let selector = By::Css("div[class='sc-hdWpuu cCeQmZ']");
@@ -77,7 +77,7 @@ pub async fn auto_answer(driver: &WebDriver, answers: &Value) -> WebDriverResult
 
     let (answer, question) = get(driver, answers).await?;
     if answer != "" {
-        let selector = By::XPath(&format!("//span[text()='{}']", answer));
+        let selector = By::XPath(&format!("//span[text()=\"{}\"]", answer));
         let is_multi = info::exists(driver, &selector).await?;
         if is_multi {
             action::click(driver, &selector).await?;
@@ -92,7 +92,7 @@ pub async fn auto_answer(driver: &WebDriver, answers: &Value) -> WebDriverResult
         sleep(Duration::from_secs_f64(0.25)).await;
 
         let selector = By::Css("div.sc-jvfpSw.eWPjkh");
-        let elements = info::query_all(driver, &selector, 3).await?;
+        let elements = info::query_all(driver, &selector).await?;
         if let Some(element) = elements.get(2) {
             element.click().await?;
             let wait_time = get_random_number(3..10);

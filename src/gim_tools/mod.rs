@@ -17,13 +17,13 @@ pub async fn login(driver: &WebDriver) -> WebDriverResult<Value> {
     let button = By::Tag("button");
 
     println!("{}", "Logging in...".blue());
-    action::click_from(driver, &By::Tag("a"), 1, 10).await?;
+    action::click_from(driver, &By::Tag("a"), 1).await?;
 
     let email = data["email"].as_str().unwrap();
     action::send_keys(driver, &input, email).await?;
     println!("{}", "Email entered".blue());
 
-    action::click_from(driver, &button, 1, 10).await?;
+    action::click_from(driver, &button, 1).await?;
 
     sleep(Duration::from_secs_f64(0.5)).await;
 
@@ -33,8 +33,8 @@ pub async fn login(driver: &WebDriver) -> WebDriverResult<Value> {
 
     action::click(driver, &button).await?;
 
-    let time = format!("(took {}s)", start.elapsed().as_secs()).dimmed();
-    println!("{}", format!("{} {}", "Logged in".blue(), time));
+    let time = format!("(took {:.2}s)", start.elapsed().as_secs_f32());
+    println!("{}", format!("{} {}", "Logged in".blue(), time.dimmed()));
 
     Ok(data)
 }

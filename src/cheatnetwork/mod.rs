@@ -8,17 +8,16 @@ pub async fn login(
     old_handle: &WindowHandle,
     data: &Value,
 ) -> WebDriverResult<()> {
-    let new_handle = driver.new_tab().await?;
-    driver.switch_to_window(new_handle).await?;
+    let tab_handle = driver.new_tab().await?;
+    driver.switch_to_window(tab_handle).await?;
     driver.goto("https://cheatnetwork.eu/login").await?;
 
-    action::send_keys(
-        driver,
-        &By::Tag("input"),
-        data["backup-key"].as_str().unwrap(),
-    )
-    .await?;
-    action::click_from(driver, &By::Tag("button"), 2, 10).await?;
+    let input = By::Tag("input");
+    let button = By::Tag("button");
+
+    let backup_key = data["backup-key"].as_str().unwrap();
+    action::send_keys(driver, &input, backup_key).await?;
+    action::click_from(driver, &button, 2).await?;
 
     driver.close_window().await?;
     driver.switch_to_window(old_handle.clone()).await?;
