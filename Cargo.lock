@@ -587,6 +587,7 @@ dependencies = [
  "async-recursion",
  "chromedriver-manager",
  "colored",
+ "regex",
  "serde_json",
  "thirtyfour",
  "tokio",

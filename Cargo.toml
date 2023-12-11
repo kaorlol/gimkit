@@ -7,6 +7,7 @@ edition = "2021"
 async-recursion = "1.0.5"
 chromedriver-manager = "0.2.2"
 colored = "2.0.4"
+regex = "1.10.2"
 serde_json = "1.0.108"
 thirtyfour = "0.31.0"
 tokio = { version = "1.35.0", features = ["full"] }
