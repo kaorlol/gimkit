@@ -4,58 +4,58 @@ use thirtyfour::prelude::*;
 
 #[async_recursion]
 pub async fn get_text(driver: &WebDriver, by: &By, text: &str) -> WebDriverResult<String> {
-    let element = query(driver, by).await?;
-    let element_text = element.text().await?;
+	let element = query(driver, by).await?;
+	let element_text = element.text().await?;
 
-    if element_text == text {
-        return get_text(driver, by, text).await;
-    }
+	if element_text == text {
+		return get_text(driver, by, text).await;
+	}
 
-    Ok(element_text)
+	Ok(element_text)
 }
 
 #[async_recursion]
 pub async fn get_value(driver: &WebDriver, by: &By, value: &str) -> WebDriverResult<String> {
-    let element = query(driver, by).await?;
-    let element_value = element.value().await?.unwrap();
+	let element = query(driver, by).await?;
+	let element_value = element.value().await?.unwrap();
 
-    if element_value == value {
-        return get_value(driver, by, value).await;
-    }
+	if element_value == value {
+		return get_value(driver, by, value).await;
+	}
 
-    Ok(element_value)
+	Ok(element_value)
 }
 
 #[async_recursion]
 pub async fn get_text_from(
-    driver: &WebDriver,
-    by: &By,
-    index: usize,
-    text: &str,
+	driver: &WebDriver,
+	by: &By,
+	index: usize,
+	text: &str,
 ) -> WebDriverResult<String> {
-    let elements = query_all(driver, by).await?;
-    let element_text = elements.get(index).unwrap().text().await?;
+	let elements = query_all(driver, by).await?;
+	let element_text = elements.get(index).unwrap().text().await?;
 
-    if element_text == text {
-        return get_text_from(driver, by, index, text).await;
-    }
+	if element_text == text {
+		return get_text_from(driver, by, index, text).await;
+	}
 
-    Ok(element_text)
+	Ok(element_text)
 }
 
 #[async_recursion]
 pub async fn get_value_from(
-    driver: &WebDriver,
-    by: &By,
-    index: usize,
-    value: &str,
+	driver: &WebDriver,
+	by: &By,
+	index: usize,
+	value: &str,
 ) -> WebDriverResult<String> {
-    let elements = query_all(driver, by).await?;
-    let element_value = elements.get(index).unwrap().value().await?.unwrap();
+	let elements = query_all(driver, by).await?;
+	let element_value = elements.get(index).unwrap().value().await?.unwrap();
 
-    if element_value == value {
-        return get_value_from(driver, by, index, value).await;
-    }
+	if element_value == value {
+		return get_value_from(driver, by, index, value).await;
+	}
 
-    Ok(element_value)
+	Ok(element_value)
 }

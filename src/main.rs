@@ -1,9 +1,10 @@
 use gimkit::{
-    cheatnetwork::answer::get_answers,
-    gim_tools::{
-        assignment::{auto_answer, start_assignment},
-        login,
-    },
+	cheatnetwork::answer::get_answers,
+	gim_tools::{
+		assignment::{auto_answer, start_assignment},
+		login,
+	},
+	utils::is_gimkit_link,
 };
 
 use chromedriver_manager::{loglevel::LogLevel, manager::Handler};
@@ -15,32 +16,40 @@ use thirtyfour::prelude::*;
 
 #[tokio::main]
 async fn main() -> WebDriverResult<()> {
-    let args = std::env::args().collect::<Vec<String>>();
-    if args.len() < 2 {
-        println!("Usage: {} <assignment link>", args[0]);
-        return Ok(());
-    }
+	let args = std::env::args().collect::<Vec<String>>();
+	match args.len() {
+		2 => {
+			if !is_gimkit_link(&args[1]) {
+				println!("Invalid gimkit link");
+				return Ok(());
+			}
+		}
+		_ => {
+			println!("Usage: {} <assignment link>", args[0]);
+			return Ok(());
+		}
+	}
 
-    let mut caps = DesiredCapabilities::chrome();
-    caps.add_chrome_arg("--mute-audio")?;
-    // caps.set_headless()?;
+	let mut caps = DesiredCapabilities::chrome();
+	caps.add_chrome_arg("--mute-audio")?;
+	// caps.set_headless()?;
 
-    Handler::new()
-        .launch_chromedriver(&mut caps, "9515", LogLevel::Off)
-        .await
-        .expect("Failed to start chromedriver");
+	Handler::new()
+		.launch_chromedriver(&mut caps, "9515", LogLevel::Off)
+		.await
+		.expect("Failed to start chromedriver");
 
-    let driver = WebDriver::new("http://localhost:9515", caps).await?;
-    driver.goto(&args[1]).await?;
+	let driver = WebDriver::new("http://localhost:9515", caps).await?;
+	driver.goto(&args[1]).await?;
 
-    let data = login(&driver).await?;
-    start_assignment(&driver).await?;
+	let data = login(&driver).await?;
+	start_assignment(&driver).await?;
 
-    let old_handle = driver.window().await?;
-    let answers = get_answers(&driver, &old_handle, data).await?;
-    auto_answer(&driver, &answers).await?;
+	let old_handle = driver.window().await?;
+	let answers = get_answers(&driver, &old_handle, data).await?;
+	auto_answer(&driver, &answers).await?;
 
-    driver.quit().await?;
+	driver.quit().await?;
 
-    Ok(())
+	Ok(())
 }
