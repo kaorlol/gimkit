@@ -11,7 +11,7 @@ use thirtyfour::prelude::*;
 use tokio::time::sleep;
 
 async fn check_completed(driver: &WebDriver) -> WebDriverResult<bool> {
-	let completed_text = By::Css("div.sc-kmbxGf.jjrWnM");
+	let completed_text = By::XPath("//div[text()=\"Complete!\"]");
 	if let Err(_) = info::find(driver, &completed_text).await {
 		return Ok(false);
 	}
@@ -31,27 +31,42 @@ async fn interference(driver: &WebDriver) -> WebDriverResult<()> {
 	action::click_from(driver, &close_button, 1).await?;
 	println!("{}", "Interference removed".blue());
 
-	let start_button = By::Css("div.sc-hdWpuu.cCeQmZ");
+	let start_button = By::Css("div.sc-bVhkf.debiKD");
 	action::click(driver, &start_button).await?;
 
 	Ok(())
 }
 
-async fn get(driver: &WebDriver, data: &Value) -> WebDriverResult<(String, String)> {
+async fn get_answer(driver: &WebDriver) -> WebDriverResult<String> {
+	let kit_selector = By::Id("kit");
+	let kit_element = info::find(driver, &kit_selector).await?;
+	let data_string = match kit_element.attr("data").await {
+		Ok(data) => data.unwrap(),
+		Err(_) => return Ok("couldn't find kit".to_string()),
+	};
+
+	let data: Value = serde_json::from_str(&data_string).unwrap();
+	let questions = data["kit"]["questions"].as_array().unwrap();
+
 	let question_selector = By::Css("span.notranslate.lang-en");
-	let question = info::get_text(driver, &question_selector).await?;
+	let question_ = info::get_text(driver, &question_selector).await?;
+	let correct_answer = questions
+		.iter()
+		.find_map(|question| {
+			let text = question["text"].as_str().unwrap_or_default();
+			if text == question_ {
+				let answers = &question["answers"];
+				for answer in answers.as_array().unwrap() {
+					if answer["correct"].as_bool().unwrap_or(false) {
+						return Some(answer["text"].as_str().unwrap_or_default().to_string());
+					}
+				}
+			}
+			None
+		})
+		.unwrap_or_else(|| "Answer not found".to_string());
 
-	if let Some(entry) = data.as_array().and_then(|arr| {
-		arr.iter()
-			.find(|entry| entry["question"].as_str() == Some(question.as_str()))
-	}) {
-		if let Some(answer) = entry["answers"].as_array().and_then(|arr| arr.first()) {
-			let answer_string = answer.to_string().trim_matches('"').to_owned();
-			return Ok((answer_string, question));
-		}
-	}
-
-	Ok((String::new(), String::new()))
+	Ok(correct_answer)
 }
 
 pub async fn start_assignment(driver: &WebDriver) -> WebDriverResult<()> {
@@ -63,7 +78,7 @@ pub async fn start_assignment(driver: &WebDriver) -> WebDriverResult<()> {
 	action::click(driver, &start_button).await?;
 
 	println!("{}", "Assignment started\nLoading assignment...".blue());
-	let start_button = By::Css("div.sc-hdWpuu.cCeQmZ");
+	let start_button = By::Css("div.sc-bVhkf.debiKD");
 	action::click(driver, &start_button).await?;
 
 	sleep(Duration::from_secs(1)).await;
@@ -72,44 +87,44 @@ pub async fn start_assignment(driver: &WebDriver) -> WebDriverResult<()> {
 }
 
 #[async_recursion]
-pub async fn auto_answer(driver: &WebDriver, answers: &Value) -> WebDriverResult<()> {
+pub async fn auto_answer(driver: &WebDriver) -> WebDriverResult<()> {
 	if check_completed(driver).await? {
 		return Ok(());
 	}
 
 	interference(driver).await?;
 
-	let (answer, question) = get(driver, answers).await?;
-	if answer != "" {
+	let answer = get_answer(driver).await?;
+	if answer != "Answer not found" {
 		let answer_text = By::XPath(&format!("//span[text()=\"{}\"]", answer));
 		let is_multi = info::exists(driver, &answer_text).await?;
 		if is_multi {
 			action::click(driver, &answer_text).await?;
 		} else {
 			let text_box = By::Css("input[placeholder='Enter answer here...']");
-			action::send_keys(driver, &text_box, &answer).await?;
-
-			sleep(Duration::from_secs_f64(0.25)).await;
-
-			let submit_button = By::Css("div.sc-EPlqQ.iwsjJJ");
-			action::click(driver, &submit_button).await?;
+			action::send_keys(driver, &text_box, &(answer.clone() + Key::Enter)).await?;
 		}
 
 		sleep(Duration::from_secs_f64(0.25)).await;
 
-		let buttons = By::Css("div.sc-jvfpSw.eWPjkh");
-		let elements = info::query_all(driver, &buttons).await?;
-		if let Some(element) = elements.get(2) {
-			element.click().await?;
+		let continue_selector = By::XPath("//div[text()=\"Continue\"]");
+		let continue_button = info::find(driver, &continue_selector).await;
+
+		if continue_button.is_ok() {
+			continue_button?.click().await?;
 
 			let wait_time = get_random_number(3..10);
-			println!("{}", format!("\nQuestion: '{question}', Answer Submitted: '{answer}'\nWaiting for {wait_time} seconds").blue());
+			// Question: '{question}',
+			println!(
+				"{}",
+				format!("\nAnswer Submitted: '{answer}'\nWaiting for {wait_time} seconds").blue()
+			);
 
 			sleep(Duration::from_secs(wait_time)).await;
 		}
 	}
 
-	auto_answer(driver, answers).await?;
+	auto_answer(driver).await?;
 
 	Ok(())
 }

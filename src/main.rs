@@ -1,5 +1,6 @@
+use std::time::Duration;
+
 use gimkit::{
-	cheatnetwork::answer::get_answers,
 	gim_tools::{
 		assignment::{auto_answer, start_assignment},
 		login,
@@ -9,6 +10,7 @@ use gimkit::{
 
 use chromedriver_manager::{loglevel::LogLevel, manager::Handler};
 use thirtyfour::prelude::*;
+use tokio::time::sleep;
 
 // TODO: Support for progress bar
 // TODO: Rewrite code to be better and more optimized
@@ -42,12 +44,16 @@ async fn main() -> WebDriverResult<()> {
 	let driver = WebDriver::new("http://localhost:9515", caps).await?;
 	driver.goto(&args[1]).await?;
 
-	let data = login(&driver).await?;
+	login(&driver).await?;
 	start_assignment(&driver).await?;
 
-	let old_handle = driver.window().await?;
-	let answers = get_answers(&driver, &old_handle, data).await?;
-	auto_answer(&driver, &answers).await?;
+	driver
+		.execute(include_str!("gim_tools/answer_scraper.js"), vec![])
+		.await?;
+
+	sleep(Duration::from_secs(1)).await;
+
+	auto_answer(&driver).await?;
 
 	driver.quit().await?;
 
